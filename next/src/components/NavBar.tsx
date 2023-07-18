@@ -1,34 +1,34 @@
 import { Disclosure } from "@headlessui/react";
-import { FaBars, FaChevronRight, FaQuestion } from "react-icons/fa";
+import { FaBars, FaChevronRight, FaTimes } from "react-icons/fa";
 import FadeIn from "./motions/FadeIn";
 import clsx from "clsx";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import HomeIcon from "../../public/icons/home-default-regular.svg";
-import BarcodeIcon from "../../public/icons/barcode-default-regular.svg";
-import DocumentIcon from "../../public/icons/document-default-regular.svg";
-import LocationPinIcon from "../../public/icons/locationpin-default-regular.svg";
+import HomeIcon from "../../public/icons/icon-home.svg";
+import PricingIcon from "../../public/icons/icon-pricing.svg";
+import DocsIcon from "../../public/icons/icon-docs.svg";
+import RoadmapIcon from "../../public/icons/icon-roadmap.svg";
 import TextButton from "./TextButton";
 import PrimaryButton from "./PrimaryButton";
 import CycleIcons from "./motions/CycleIcons";
 import React from "react";
-import MegaphoneIcon from "../../public/icons/megaphone-default-regular.svg";
-import GlowWrapper from "./GlowWrapper";
+import BlogsIcon from "../../public/icons/icon-blogs.svg";
 
 const navigation = [
-  { name: "Home", href: "/", icon: <HomeIcon /> },
-  { name: "Blog", href: "https://twitter.com/ReworkdAI", icon: <MegaphoneIcon /> },
-  { name: "Pricing", href: "https://agentgpt.reworkd.ai/plan", icon: <BarcodeIcon /> },
+  { name: "Home", href: "/landing-page", icon: <HomeIcon /> },
+  { name: "Blog", href: "https://twitter.com/ReworkdAI", icon: <BlogsIcon /> },
+  { name: "Pricing", href: "https://agentgpt.reworkd.ai/plan", icon: <PricingIcon /> },
   {
-    name: "Roadmap",
-    href: "https://github.com/orgs/reworkd/projects/3",
-    icon: <LocationPinIcon />,
+    name: "Github",
+    href: "https://github.com/reworkd/AgentGPT",
+    icon: <RoadmapIcon />,
   },
-  { name: "Docs", href: "https://docs.reworkd.ai/", icon: <DocumentIcon /> },
+  { name: "Docs", href: "https://docs.reworkd.ai/", icon: <DocsIcon /> },
 ];
 
 export default function NavBar() {
   const router = useRouter();
+  const currentIndex = navigation.findIndex((nav) => nav.href === router.pathname);
   const [hoveredButtonIndex, setHoveredButtonIndex] = React.useState(0);
 
   return (
@@ -37,19 +37,20 @@ export default function NavBar() {
         {({ open }) => (
           <>
             <div className="align-center flex h-16 flex-row justify-between">
-              <div className="flex flex-1 flex-shrink-0 items-center">
+              <div className="flex flex-shrink-0 cursor-pointer items-center lg:flex-1">
                 <Image
-                  src="/logos/dark-default-gradient.svg"
-                  width="32"
-                  height="32"
+                  src="/logos/dark-default-solid.svg"
+                  width="25"
+                  height="25"
                   alt="Reworkd AI"
-                  className="mr-2"
+                  className="mb-1 mr-2"
                 />
-                <span className="text-xl font-extralight tracking-wider">Reworkd</span>
+                <span className="text-xl font-light tracking-wider">Reworkd</span>
               </div>
-              <div className="hidden flex-1 items-center justify-center sm:flex">
-                <div className="sds flex h-[42px] items-center self-center overflow-hidden rounded-full border-[0.5px] border-white/30 bg-neutral-100 bg-opacity-5 px-2 py-1 backdrop-blur-lg">
+              <div className="hidden flex-1 items-center justify-center xmd:flex">
+                <div className="border-gradient flex h-[42px] items-center self-center overflow-hidden rounded-full bg-opacity-5 px-2 py-1 backdrop-blur-lg">
                   <CycleIcons
+                    currentIndex={currentIndex}
                     hoveredItemIndex={hoveredButtonIndex}
                     icons={navigation.map((nav) => nav.icon)}
                   />
@@ -58,9 +59,8 @@ export default function NavBar() {
                       key={item.name}
                       href={item.href}
                       className={clsx(
-                        "relative flex flex-col items-center justify-center p-2 px-4 text-center font-inter text-sm tracking-normal text-white/50 transition-colors duration-700 hover:text-white",
-                        "before:absolute before:-bottom-[17px] before:-z-20 before:h-6 before:w-7 before:bg-white/60 before:opacity-0 before:blur-lg before:transition-opacity before:duration-700 hover:before:opacity-100",
-                        "after-gradient after:absolute after:-bottom-[2.5px] after:h-[1px] after:w-14 after:px-2 after:opacity-0 after:transition-opacity after:duration-700 hover:after:opacity-100"
+                        "after-gradient relative flex flex-col items-center justify-center p-2 px-4 text-center font-inter text-sm tracking-normal transition-colors duration-700 before:absolute before:-bottom-[20px] before:-z-20 before:h-6 before:w-12 before:bg-white/60 before:blur-lg before:transition-opacity before:duration-700 after:absolute after:-bottom-[2.25px] after:h-[1px] after:w-16 after:px-2 after:transition-opacity after:duration-700  hover:text-white hover:before:opacity-100 hover:after:opacity-100",
+                        currentIndex !== i && "text-white/50 before:opacity-0 after:opacity-0"
                       )}
                       onMouseEnter={() => setHoveredButtonIndex(i)}
                       onMouseLeave={() => setHoveredButtonIndex(0)}
@@ -70,7 +70,7 @@ export default function NavBar() {
                   ))}
                 </div>
               </div>
-              <div className="hidden flex-1 gap-2 justify-end sm:flex sm:items-center">
+              <div className="hidden justify-end gap-2 xmd:flex sm:items-center lg:flex-1">
                 <TextButton
                   onClick={() => {
                     router.push("/").catch(console.error);
@@ -84,28 +84,26 @@ export default function NavBar() {
                     />
                   </>
                 </TextButton>
-                <GlowWrapper>
-                  <PrimaryButton
-                    onClick={() => {
-                      router.push("/").catch(console.error);
-                    }}
-                  >
-                    <>
-                      <span>Contact Us</span>
-                      <FaChevronRight
-                        size="12"
-                        className="text-gray-400 transition-transform group-hover:translate-x-1"
-                      />
-                    </>
-                  </PrimaryButton>
-                </GlowWrapper>
+                <PrimaryButton
+                  onClick={() => {
+                    window.open("https://6h6bquxo5g1.typeform.com/to/qscfsOf1", "_blank");
+                  }}
+                >
+                  <>
+                    <span>Contact Us</span>
+                    <FaChevronRight
+                      size="12"
+                      className="text-gray-400 transition-transform group-hover:translate-x-1"
+                    />
+                  </>
+                </PrimaryButton>
               </div>
-              <div className="-mr-2 flex items-center sm:hidden">
+              <div className="-mr-2 flex items-center xmd:hidden">
                 {/* Mobile menu button */}
                 <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                   <span className="sr-only">Open main menu</span>
                   {open ? (
-                    <FaQuestion className="block h-6 w-6" aria-hidden="true" />
+                    <FaTimes className="block h-6 w-6" aria-hidden="true" />
                   ) : (
                     <FaBars className="block h-6 w-6" aria-hidden="true" />
                   )}
@@ -113,17 +111,14 @@ export default function NavBar() {
               </div>
             </div>
 
-            <Disclosure.Panel className="sm:hidden">
+            <Disclosure.Panel className="xmd:hidden">
               <div className="space-y-1 pb-3 pt-2">
                 {navigation.map((item) => (
                   <Disclosure.Button
                     key={item.name}
                     as="a"
                     href={item.href}
-                    className={clsx(
-                      "border-transparent text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800",
-                      "block border-l-4 py-2 pl-3 pr-4 text-base"
-                    )}
+                    className="block border-l-4 border-transparent py-2 pl-3 pr-4 text-base text-gray-600 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-800"
                   >
                     {item.name}
                   </Disclosure.Button>
