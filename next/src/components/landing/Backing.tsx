@@ -1,6 +1,7 @@
-import YCLogo from "../../../public/logos/yc-default-solid.svg";
-import PanacheLogo from "../../../public/logos/panache-default-solid.svg";
 import clsx from "clsx";
+
+import PanacheLogo from "../../../public/logos/panache-default-solid.svg";
+import YCLogo from "../../../public/logos/yc-default-solid.svg";
 
 const Backing = (props: { className?: string }) => (
   <div
@@ -24,7 +25,7 @@ const Backing = (props: { className?: string }) => (
       </div>
       <div className="hidden tracking-wide sm:flex">Backed By</div>
       <a
-        className="flex cursor-pointer flex-row items-center gap-1 font-medium text-white/95"
+        className="flex cursor-pointer flex-row items-center gap-1 font-light text-white/95"
         href="https://www.ycombinator.com/companies/reworkd"
         target="_blank"
       >
@@ -32,7 +33,7 @@ const Backing = (props: { className?: string }) => (
       </a>
       <span>and</span>
       <a
-        className="cursor-pointer font-medium text-white/95"
+        className="cursor-pointer font-light text-white/95"
         href="https://www.panache.vc/"
         target="_blank"
       >

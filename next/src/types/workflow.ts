@@ -1,6 +1,6 @@
-import { z } from "zod";
-import type { Edge, Node } from "reactflow";
 import type { Dispatch, SetStateAction } from "react";
+import type { Edge, Node } from "reactflow";
+import { z } from "zod";
 
 const NodeBlockSchema = z.object({
   type: z.string(),
@@ -23,10 +23,12 @@ const WorkflowNodeSchema = z.object({
 const WorkflowEdgeSchema = z.object({
   id: z.string(),
   source: z.string(),
+  source_handle: z.string().optional().nullable(),
   target: z.string(),
   status: z.enum(["running", "success", "failure"]).optional(),
 });
 export const WorkflowSchema = z.object({
+  id: z.string(),
   nodes: z.array(WorkflowNodeSchema),
   edges: z.array(WorkflowEdgeSchema),
 });
@@ -43,14 +45,26 @@ export const toReactFlowNode = (node: WorkflowNode) =>
     id: node.id ?? node.ref,
     data: node,
     position: { x: node.pos_x, y: node.pos_y },
-    type: "custom",
+    type: getNodeType(node.block),
   } as Node<WorkflowNode>);
 
 export const toReactFlowEdge = (edge: WorkflowEdge) =>
   ({
     ...edge,
+    sourceHandle: edge.source_handle,
     type: "custom",
     data: {
       ...edge,
     },
   } as Edge<WorkflowEdge>);
+
+export const getNodeType = (block: NodeBlock) => {
+  switch (block.type) {
+    case "ManualTriggerBlock":
+      return "trigger";
+    case "IfBlock":
+      return "if";
+    default:
+      return "custom";
+  }
+};

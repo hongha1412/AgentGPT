@@ -1,31 +1,55 @@
-import { motion } from "framer-motion";
-import FadeIn from "../motions/FadeIn";
-import BannerBadge from "../BannerBadge";
+import Spline from "@splinetool/react-spline";
 import clsx from "clsx";
-import PrimaryButton from "../PrimaryButton";
-import TextButton from "../TextButton";
-import React, { useState } from "react";
-import { useRouter } from "next/router";
+import { motion } from "framer-motion";
 import Image from "next/image";
-import { FaChevronRight } from "react-icons/fa";
-import HeroCard from "../HeroCard";
-import PurpleHeroIcon from "../../../public/icons/icon-hero-purple.svg";
+import { useRouter } from "next/router";
+import type { FC } from "react";
+import { Suspense, useState, useEffect } from "react";
+import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+
+import BlueHeroIcon from "../../../public/icons/icon-hero-blue.svg";
 import GreenHeroIcon from "../../../public/icons/icon-hero-green.svg";
 import OrangeHeroIcon from "../../../public/icons/icon-hero-orange.svg";
-import BlueHeroIcon from "../../../public/icons/icon-hero-blue.svg";
-import GlowWrapper from "../GlowWrapper";
-import Spline from "@splinetool/react-spline";
+import PurpleHeroIcon from "../../../public/icons/icon-hero-purple.svg";
 import { env } from "../../env/client.mjs";
+import BannerBadge from "../BannerBadge";
+import GlowWrapper from "../GlowWrapper";
+import HeroCard from "../HeroCard";
+import FadeIn from "../motions/FadeIn";
+import PrimaryButton from "../PrimaryButton";
+import TextButton from "../TextButton";
 
-const Hero: React.FC<{ className?: string }> = ({ className }) => {
+const Hero: FC<{ className?: string }> = ({ className }) => {
   const router = useRouter();
   const [sliderIndex, setSliderIndex] = useState(0);
   const totalCards = roles.length;
+  const [showVideo, setShowVideo] = useState(false);
 
-  const handleSliderButton = (increment: number) => {
-    const newIndex = (sliderIndex + increment + totalCards) % totalCards;
-    setSliderIndex(newIndex);
+  const handleWindowResize = () => {
+    setShowVideo(window.innerWidth <= 768);
   };
+
+  const handleSliderButtonLeft = (decrement: number) => {
+    if (sliderIndex != 0) {
+      const newIndex = (sliderIndex - decrement + totalCards) % totalCards;
+      setSliderIndex(newIndex);
+    }
+  };
+
+  const handleSliderButtonRight = (increment: number) => {
+    if (sliderIndex != roles.length - 2) {
+      const newIndex = (sliderIndex + increment + totalCards) % totalCards;
+      setSliderIndex(newIndex);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener('resize', handleWindowResize);
+
+    return () => {
+      window.removeEventListener('resize', handleWindowResize);
+    };
+  }, []);
 
   return (
     <FadeIn
@@ -33,24 +57,31 @@ const Hero: React.FC<{ className?: string }> = ({ className }) => {
       duration={3}
       className={clsx("grid grid-cols-1 place-items-center gap-2 md:grid-cols-2", className)}
     >
-      <div className="relative z-30 h-full w-full md:flex md:h-[30vw] md:w-[30vw]">
-        <div className="absolute -z-10 h-full w-full bg-gradient-radial from-[#1152FA] via-[#882BFE] to-70% opacity-25 blur-lg" />
-        <Spline
-          scene="https://prod.spline.design/mXSxjCAUYzLpjDfY/scene.splinecode"
-          className="hidden md:flex"
-        />
-        <video autoPlay loop muted className="md:hidden">
-          <source src={`${env.NEXT_PUBLIC_CDN}/orb-v1-medium.webm`} type="video/webm" />
-        </video>
+      <div className="relative z-30 flex h-full w-full justify-center md:flex md:h-[30vw] md:w-[30vw]">
+        <div className="absolute -z-10 h-full w-full bg-gradient-radial from-[#1152FA] via-[#882BFE] to-70% opacity-25" />
+        {showVideo ? (
+          <Suspense>
+            <video autoPlay loop muted className="max-h-72 md:hidden" disableRemotePlayback>
+              <source src={`${env.NEXT_PUBLIC_CDN}/orb-v1-medium.webm`} type="video/webm" />
+            </video>
+          </Suspense>
+        ) : (
+          <Suspense>
+            <Spline
+              scene="https://prod.spline.design/mXSxjCAUYzLpjDfY/scene.splinecode"
+              className="hidden md:flex"
+            />
+          </Suspense>
+        )}
       </div>
       <div className="relative z-10 col-span-1 max-w-full md:order-first">
-        <div className="relative flex flex-col items-center gap-12 md:items-start">
+        <div className="relative flex flex-col items-center gap-4 md:items-start md:gap-12">
           <BannerBadge
-            href="https://calendly.com/reworkdai/enterprise-customers"
+            href="https://www.ycombinator.com/launches/J1r-reworkd-ai-the-open-source-zapier-of-ai-agents"
             target="_blank"
             className="hidden md:flex"
           >
-            <span className="">Reworkd raises a 1.25M pre-seed</span>
+            <span className="tracking-wider text-gray-300">Reworkd raises $1.25M pre-seed</span>
           </BannerBadge>
           <div className="flex flex-col items-center md:items-start">
             <h1 className="resend-font-effect-hero bg-gradient-to-br from-white to-white/30 bg-clip-text pb-2 text-center text-5xl font-normal tracking-[.09rem] text-transparent md:text-left md:text-5xl lg:text-6xl xl:text-7xl">
@@ -65,36 +96,46 @@ const Hero: React.FC<{ className?: string }> = ({ className }) => {
                 </span>
               </div>
             </h1>
-            <p className="my-3 inline-block bg-gradient-to-r from-white via-white via-50% to-neutral-500 bg-clip-text text-center align-top font-inter font-light leading-[22px] tracking-[.08rem] text-transparent sm:w-4/5 md:text-left">
+            <p className="my-3 inline-block bg-gradient-to-r from-white via-white via-50% to-neutral-500 bg-clip-text text-center align-top font-inter font-[400] leading-[24px] tracking-[.08rem] text-transparent sm:w-4/5 md:text-left">
               Leverage AI Agents to automate the workflows you once spent countless human hours on.
               Experience a new way of working.
             </p>
           </div>
-          <div className="relative hidden w-full items-center overflow-hidden sm:max-w-[40em] md:flex">
-            <motion.div
-              className="z-20 flex gap-5"
-              animate={{ x: `${sliderIndex * -308}px` }}
-              transition={{ duration: 0.5, type: "spring", stiffness: 60 }}
-            >
-              {roles.map((role, index) => (
-                <HeroCard
-                  key={role.title}
-                  title={role.title}
-                  subtitle={role.subtitle}
-                  leftIcon={role.icon}
-                  onClick={() => {
-                    router.push("/").catch(console.error);
-                  }}
-                />
-              ))}
-            </motion.div>
-            <div
-              id="tests"
-              className="absolute right-0 z-20 h-full w-10 bg-gradient-to-r from-transparent to-black to-75% text-white sm:w-40"
-            />
+
+          <div className="relative hidden w-full items-center sm:max-w-[40em] md:flex">
             <button
-              onClick={() => handleSliderButton(1)}
-              className="group absolute right-10 z-30 flex h-6 w-8 items-center justify-center rounded-full border border-white/20 bg-black bg-gradient-to-r from-white/10 to-black hover:border-white/30"
+              onClick={() => handleSliderButtonLeft(1)}
+              className="group absolute left-0 z-30 flex h-6 w-8 -translate-x-5 items-center justify-center rounded-full border border-white/20 bg-black bg-gradient-to-r from-white/10 to-black opacity-75 hover:border-white/30"
+            >
+              <FaChevronLeft
+                size={10}
+                className="text-gray-400 transition-transform group-hover:translate-x-0.5"
+              />
+            </button>
+            <div className="relative hidden w-full items-center overflow-hidden sm:max-w-[40em] md:flex">
+              <motion.div
+                className="z-20 flex gap-5"
+                animate={{ x: `${sliderIndex * -308}px` }}
+                transition={{ duration: 0.5, type: "spring", stiffness: 60 }}
+              >
+                {roles.map((role, index) => (
+                  <HeroCard
+                    key={role.title}
+                    title={role.title}
+                    subtitle={role.subtitle}
+                    leftIcon={role.icon}
+                    onClick={() => {
+                      router.push("/").catch(console.error);
+                    }}
+                  />
+                ))}
+              </motion.div>
+            </div>
+            <div className="absolute left-0 z-20 h-full w-6 -translate-x-0.5 bg-gradient-to-l from-transparent to-black" />
+            <div className="absolute right-0 z-20 h-full w-40 translate-x-0.5 bg-gradient-to-r from-transparent to-black to-75%" />
+            <button
+              onClick={() => handleSliderButtonRight(1)}
+              className="group absolute right-10 z-30 flex h-6 w-8 items-center justify-center rounded-full border border-white/20 bg-black bg-gradient-to-r from-white/10 to-black opacity-75 hover:border-white/30"
             >
               <FaChevronRight
                 size={10}
@@ -112,7 +153,7 @@ const Hero: React.FC<{ className?: string }> = ({ className }) => {
                 }}
               >
                 <>
-                  <span className="py-2 font-semibold">Join the Waitlist</span>
+                  <span className="py-2 font-medium">Join the Waitlist</span>
                   <FaChevronRight
                     size="10"
                     className="text-gray-400 transition-transform group-hover:translate-x-1"
@@ -122,7 +163,7 @@ const Hero: React.FC<{ className?: string }> = ({ className }) => {
             </GlowWrapper>
             <TextButton
               onClick={() => {
-                router.push("/").catch(console.error);
+                router.push("https://agentgpt.reworkd.ai/").catch(console.error);
               }}
             >
               <>
@@ -144,11 +185,11 @@ const roles = [
   {
     title: "Researcher",
     subtitle: "Report on key analytics",
-    icon: <PurpleHeroIcon c />,
+    icon: <PurpleHeroIcon />,
   },
   {
     title: "Marketer",
-    subtitle: "Advertise our new product",
+    subtitle: "Create new campaigns",
     icon: <OrangeHeroIcon />,
   },
   {

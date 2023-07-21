@@ -1,11 +1,12 @@
-import type { FC } from "react";
-import React, { useState } from "react";
+import clsx from "clsx";
 import type { Session } from "next-auth";
 import { useTranslation } from "next-i18next";
-import clsx from "clsx";
-import { get_avatar } from "../../utils/user";
+import type { FC } from "react";
+import React, { useState } from "react";
 import { FaEllipsisH, FaSignInAlt } from "react-icons/fa";
+
 import Dialog from "../../ui/dialog";
+import { get_avatar } from "../../utils/user";
 import { ThemeMenu } from "../ThemeMenu";
 
 const AuthItem: FC<{
@@ -46,8 +47,13 @@ const AuthItem: FC<{
 
         <span className="sr-only">Your profile</span>
         <div>
-          <p aria-hidden="true">{user?.name}</p>
-          <p aria-hidden="true" className="text-xs font-thin">
+          <p aria-hidden="true" className="max-w-[6.5rem] overflow-hidden text-ellipsis">
+            {user?.name}
+          </p>
+          <p
+            aria-hidden="true"
+            className="max-w-[6.5rem] overflow-hidden text-ellipsis text-xs font-thin"
+          >
             {user?.email}
           </p>
         </div>
@@ -83,7 +89,7 @@ const AuthItem: FC<{
             </>
           }
         >
-          <p className="text-sm text-gray-600">{user?.name}</p>
+          <p className="max-w-full text-sm text-gray-600">{user?.name}</p>
           <p className="text-sm text-gray-400">{user?.email}</p>
         </Dialog>
       </div>
