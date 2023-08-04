@@ -2,7 +2,7 @@ import asyncio
 from typing import Dict, List
 
 from fastapi import Depends
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from reworkd_platform.db.crud.base import BaseCrud
@@ -15,8 +15,10 @@ from reworkd_platform.schemas.workflow.base import (
     Workflow,
     WorkflowFull,
     WorkflowUpdate,
+    WorkflowCreate,
 )
 from reworkd_platform.web.api.dependencies import get_current_user
+from reworkd_platform.web.api.http_responses import forbidden
 
 
 class WorkflowCRUD(BaseCrud):
@@ -34,11 +36,23 @@ class WorkflowCRUD(BaseCrud):
         return WorkflowCRUD(session, user)
 
     async def get_all(self) -> List[Workflow]:
-        query = select(WorkflowModel).where(
-            and_(
-                WorkflowModel.user_id == self.user.id,
-                WorkflowModel.delete_date.is_(None),
+        query = (
+            select(WorkflowModel)
+            .where(
+                or_(
+                    and_(
+                        WorkflowModel.user_id == self.user.id,
+                        WorkflowModel.organization_id.is_(None),
+                        WorkflowModel.delete_date.is_(None),
+                    ),
+                    and_(
+                        WorkflowModel.organization_id == self.user.organization_id,
+                        WorkflowModel.organization_id.is_not(None),
+                        WorkflowModel.delete_date.is_(None),
+                    ),
+                )
             )
+            .order_by(WorkflowModel.create_date.desc())
         )
 
         return [
@@ -54,6 +68,8 @@ class WorkflowCRUD(BaseCrud):
             self.edge_service.get_edges(workflow_id),
         )
 
+        self.validate_permissions(workflow)
+
         # get node blocks
         blocks = await self.node_service.get_node_blocks(
             [node.id for node in nodes.values()]
@@ -67,22 +83,22 @@ class WorkflowCRUD(BaseCrud):
             edges=[edge.to_schema() for edge in edges.values()],
         )
 
-    async def create(self, name: str, description: str) -> Workflow:
+    async def create(self, workflow_create: WorkflowCreate) -> Workflow:
         return (
             await WorkflowModel(
                 user_id=self.user.id,
-                organization_id=None,  # TODO: add organization_id
-                name=name,
-                description=description,
+                organization_id=self.user.organization_id,
+                name=workflow_create.name,
+                description=workflow_create.description,
             ).save(self.session)
         ).to_schema()
 
     async def delete(self, workflow_id: str) -> None:
         """Soft a delete workflow"""
         # TODO: Make sure workflow logic doesnt run on deleted workflows
-        # TODO: make sure users can only delete their own workflows
-
         workflow = await WorkflowModel.get_or_404(self.session, workflow_id)
+
+        self.validate_permissions(workflow)
         await workflow.delete(self.session)
 
     async def update(self, workflow_id: str, workflow_update: WorkflowUpdate) -> str:
@@ -94,6 +110,8 @@ class WorkflowCRUD(BaseCrud):
                 [node.id for node in workflow_update.nodes if node.id]
             ),
         )
+
+        self.validate_permissions(workflow)
 
         # TODO: use co-routines to make this faster
         # Map from ref to id so edges can use id's instead of refs
@@ -130,3 +148,12 @@ class WorkflowCRUD(BaseCrud):
         await self.edge_service.delete_old_edges(workflow_update.edges, all_edges)
 
         return "OK"
+
+    def validate_permissions(self, workflow: WorkflowModel) -> None:
+        if (
+            workflow.user_id == self.user.id
+            or workflow.organization_id == self.user.organization_id
+        ):
+            return
+
+        raise forbidden()

@@ -1,7 +1,7 @@
 import React, { memo } from "react";
 import { type NodeProps, Position } from "reactflow";
 
-import AbstractNode from "./AbstractNode";
+import AbstractNode, { NodeTitle } from "./AbstractNode";
 import { getNodeBlockDefinitions } from "../../../services/workflow/node-block-definitions";
 import type { WorkflowNode } from "../../../types/workflow";
 
@@ -20,24 +20,19 @@ function IfNode(props: NodeProps<WorkflowNode>) {
           position: Position.Bottom,
           type: "source",
           text: "True",
-          className: "!left-[20%] !-bottom-4",
+          className: "!left-[20%] !-bottom-4 text-white text-[0.5rem] px-1",
         },
 
         {
           id: "false",
           position: Position.Bottom,
           text: "False",
-          className: "!left-[80%] !-bottom-4",
+          className: "!left-[80%] !-bottom-4 text-white text-[0.5rem] px-1",
           type: "source",
         },
       ]}
     >
-      <div className="flex items-center">
-        <div className="ml-2">
-          <div className="text-lg font-bold text-gray-100">{definition?.name}</div>
-          <div className="text-md text-sm font-thin">{definition?.description}</div>
-        </div>
-      </div>
+      <NodeTitle definition={definition} />
     </AbstractNode>
   );
 }

@@ -3,12 +3,10 @@ import type { IncomingMessage, ServerResponse } from "http";
 import { getCookie, setCookie } from "cookies-next";
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { AuthOptions } from "next-auth";
-import type { Adapter } from "next-auth/adapters";
+import type { Adapter, AdapterUser } from "next-auth/adapters";
 import Credentials from "next-auth/providers/credentials";
 import { v4 } from "uuid";
 import { z } from "zod";
-
-
 
 const monthFromNow = () => {
   const now = new Date(Date.now());
@@ -38,6 +36,7 @@ export const options = (
         name: "Username, Development Only (Insecure)",
         credentials: {
           name: { label: "Username", type: "text" },
+          superAdmin: { label: "SuperAdmin", type: "text" },
         },
         async authorize(credentials, req) {
           if (!credentials) return null;
@@ -45,18 +44,24 @@ export const options = (
           const creds = z
             .object({
               name: z.string().min(1),
+              superAdmin: z.preprocess((str) => str === "true", z.boolean()).default(false),
             })
             .parse(credentials);
 
           const user = await adapter.getUserByEmail(creds.name);
-          if (user) return user;
-
-          return adapter.createUser({
-            name: creds.name,
-            email: creds.name,
-            image: undefined,
-            emailVerified: null,
-          });
+          return user
+            ? adapter.updateUser({
+                id: user.id,
+                name: creds.name,
+                superAdmin: creds.superAdmin,
+              })
+            : adapter.createUser({
+                name: creds.name,
+                email: creds.name,
+                image: undefined,
+                emailVerified: null,
+                superAdmin: false,
+              } as AdapterUser);
         },
       }),
     ],

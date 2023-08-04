@@ -12,10 +12,14 @@ import { useWorkflowStore } from "../stores/workflowStore";
 import type { NodeBlock, Workflow, WorkflowEdge, WorkflowNode } from "../types/workflow";
 import { getNodeType, toReactFlowEdge, toReactFlowNode } from "../types/workflow";
 
-const eventSchema = z.object({
+const StatusEventSchema = z.object({
   nodeId: z.string(),
-  status: z.enum(["running", "success", "failure"]),
+  status: z.enum(["running", "success", "error"]),
   remaining: z.number().optional(),
+});
+
+const SaveEventSchema = z.object({
+  user_id: z.string(),
 });
 
 const updateValue = <
@@ -44,24 +48,34 @@ const updateValue = <
     })
   );
 
-export const useWorkflow = (workflowId: string, session: Session | null) => {
-  const api = new WorkflowApi(session?.accessToken);
+export const useWorkflow = (
+  workflowId: string | undefined,
+  session: Session | null,
+  organizationId: string | undefined
+) => {
+  const api = new WorkflowApi(session?.accessToken, organizationId);
   const [selectedNode, setSelectedNode] = useState<Node<WorkflowNode> | undefined>(undefined);
-  const { mutateAsync: updateWorkflow } = useMutation(
-    async (data: Workflow) => await api.update(workflowId, data)
-  );
+
+  const { mutateAsync: updateWorkflow } = useMutation(async (data: Workflow) => {
+    if (!workflowId) return;
+    await api.update(workflowId, data);
+  });
 
   const workflowStore = useWorkflowStore();
 
-  const { refetch: refetchWorkflow } = useQuery(
+  const { refetch: refetchWorkflow, isLoading } = useQuery(
     ["workflow", workflowId],
     async () => {
-      const workflow = await api.get(workflowId);
+      if (!workflowId) {
+        setNodes([]);
+        setEdges([]);
+        return;
+      }
 
+      const workflow = await api.get(workflowId);
       workflowStore.setWorkflow(workflow);
       setNodes(workflow?.nodes.map(toReactFlowNode) ?? []);
       setEdges(workflow?.edges.map(toReactFlowEdge) ?? []);
-
       return workflow;
     },
     {
@@ -82,36 +96,55 @@ export const useWorkflow = (workflowId: string, session: Session | null) => {
     else setSelectedNode(selectedNodes[0]);
   }, [nodes]);
 
-  useSocket(workflowId, eventSchema, ({ nodeId, status, remaining }) => {
-    updateValue(setNodes, "status", status, (n) => n?.id === nodeId);
-    updateValue(setEdges, "status", status, (e) => e?.target === nodeId);
-
-    if (remaining === 0) {
-      setTimeout(() => {
-        updateValue(setNodes, "status", undefined);
-        updateValue(setEdges, "status", undefined);
-      }, 1000);
-    }
-  });
-
-  const createNode: createNodeType = (block: NodeBlock) => {
-    const ref = nanoid(11);
-
-    setNodes((nodes) => [
-      ...(nodes ?? []),
+  const members = useSocket(
+    workflowId,
+    session?.accessToken,
+    [
       {
-        id: ref,
-        type: getNodeType(block),
-        position: { x: 0, y: 0 },
-        data: {
-          id: undefined,
-          ref: ref,
-          pos_x: 0,
-          pos_y: 0,
-          block: block,
+        event: "workflow:node:status",
+        callback: async (data) => {
+          const { nodeId, status, remaining } = await StatusEventSchema.parseAsync(data);
+
+          updateValue(setNodes, "status", status, (n) => n?.id === nodeId);
+          updateValue(setEdges, "status", status, (e) => e?.target === nodeId);
+
+          if (status === "error" || remaining === 0) {
+            setTimeout(() => {
+              updateValue(setNodes, "status", undefined);
+              updateValue(setEdges, "status", undefined);
+            }, 1000);
+          }
         },
       },
-    ]);
+      {
+        event: "workflow:updated",
+        callback: async (data) => {
+          const { user_id } = await SaveEventSchema.parseAsync(data);
+          if (user_id !== session?.user?.id) await refetchWorkflow();
+        },
+      },
+    ],
+    {
+      enabled: !!workflowId && !!session?.accessToken,
+    }
+  );
+
+  const createNode: createNodeType = (block: NodeBlock, position: Position) => {
+    const ref = nanoid(11);
+    const node = {
+      id: ref,
+      type: getNodeType(block),
+      position,
+      data: {
+        id: undefined,
+        ref: ref,
+        pos_x: 0,
+        pos_y: 0,
+        block: block,
+      },
+    };
+    setNodes((nodes) => [...(nodes ?? []), node]);
+    return node;
   };
 
   const updateNode: updateNodeType = (nodeToUpdate: Node<WorkflowNode>) => {
@@ -129,6 +162,8 @@ export const useWorkflow = (workflowId: string, session: Session | null) => {
   };
 
   const onSave = async () => {
+    if (!workflowId) return;
+
     await updateWorkflow({
       id: workflowId,
       nodes: nodes.map((n) => ({
@@ -145,22 +180,26 @@ export const useWorkflow = (workflowId: string, session: Session | null) => {
         target: e.target,
       })),
     });
-    await refetchWorkflow();
   };
 
-  const onExecute = async () => await api.execute(workflowId);
+  const onExecute = async () => {
+    if (!workflowId) return;
+    await api.execute(workflowId);
+  };
 
   return {
     selectedNode,
-    setSelectedNode,
     nodesModel,
     edgesModel,
     saveWorkflow: onSave,
     executeWorkflow: onExecute,
     createNode,
     updateNode,
+    members,
+    isLoading,
   };
 };
 
-export type createNodeType = (block: NodeBlock) => void;
+export type Position = { x: number; y: number };
+export type createNodeType = (block: NodeBlock, position: Position) => Node<WorkflowNode>;
 export type updateNodeType = (node: Node<WorkflowNode>) => void;
