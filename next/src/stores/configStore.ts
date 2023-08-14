@@ -6,11 +6,12 @@ import { createSelectors } from "./helpers";
 
 interface Layout {
   showRightSidebar: boolean;
+  showLogSidebar: boolean;
 }
 
 interface LayoutSlice {
   layout: Layout;
-  setLayout: (layout: Layout) => void;
+  setLayout: (layout: Partial<Layout>) => void;
 }
 
 interface OrganizationRole {
@@ -29,11 +30,15 @@ const createLayoutSlice: StateCreator<LayoutSlice> = (set, get) => {
     ...{
       layout: {
         showRightSidebar: false,
+        showLogSidebar: false,
       },
     },
-    setLayout: (layout: Layout) => {
-      set(() => ({
-        layout,
+    setLayout: (layout: Partial<Layout>) => {
+      set((prev) => ({
+        layout: {
+          ...prev.layout,
+          ...layout,
+        },
       }));
     },
   };
@@ -58,7 +63,7 @@ export const useConfigStore = createSelectors(
         ...createAuthSlice(...a),
       }),
       {
-        name: "reworkd-config",
+        name: "reworkd-config-2",
         version: 1,
         storage: createJSONStorage(() => localStorage),
       }
