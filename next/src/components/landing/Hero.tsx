@@ -16,7 +16,6 @@ import GlowWrapper from "../GlowWrapper";
 import HeroCard from "../HeroCard";
 import FadeIn from "../motions/FadeIn";
 import PrimaryButton from "../PrimaryButton";
-import TextButton from "../TextButton";
 
 const Hero: FC<{ className?: string }> = ({ className }) => {
   const router = useRouter();
@@ -88,18 +87,17 @@ const Hero: FC<{ className?: string }> = ({ className }) => {
             <h1 className="resend-font-effect-hero bg-gradient-to-br from-white to-white/30 bg-clip-text pb-2 text-center text-5xl font-normal tracking-[.09rem] text-transparent md:text-left md:text-5xl lg:text-6xl xl:text-7xl">
               <div>
                 <span className="bg-gradient-to-r from-[#1E26FF] to-[#FF04FF] bg-clip-text text-transparent">
-                  AI
+                  Web Extraction
                 </span>{" "}
-                <span className="bg-gradient-to-r from-black to-neutral-400 bg-clip-text text-transparent dark:from-white dark:to-transparent">
-                  Agents at
+                <span className="bg-gradient-to-r from-white to-transparent bg-clip-text text-transparent">
+                  At Your Fingertips.
                   <br />
-                  Your Fingertips.
                 </span>
               </div>
             </h1>
-            <p className="my-3 inline-block bg-gradient-to-r from-black via-black via-50% to-neutral-300 bg-clip-text text-center align-top font-inter font-[400] leading-[24px] tracking-[.08rem] text-transparent dark:from-white dark:via-white dark:to-neutral-500 sm:w-4/5 md:text-left">
-              Leverage AI Agents to automate the workflows you once spent countless human hours on.
-              Experience a new way of working.
+            <p className="my-3 inline-block bg-gradient-to-r from-white via-white via-50% to-neutral-500 bg-clip-text text-center align-top font-inter font-[400] leading-[24px] tracking-[.08rem] text-transparent sm:w-4/5 md:text-left">
+              Optimize web scraping with AI that generates and repairs scraping code, adapting to
+              website changes. Scale your data extraction effortlessly.
             </p>
           </div>
 
@@ -125,15 +123,12 @@ const Hero: FC<{ className?: string }> = ({ className }) => {
                     title={role.title}
                     subtitle={role.subtitle}
                     leftIcon={role.icon}
-                    onClick={() => {
-                      router.push("/").catch(console.error);
-                    }}
                   />
                 ))}
               </motion.div>
             </div>
-            <div className="absolute left-0 z-20 h-full w-6 -translate-x-0.5 bg-gradient-to-l from-transparent to-white dark:to-black" />
-            <div className="absolute right-0 z-20 h-full w-40 translate-x-0.5 bg-gradient-to-r from-transparent to-white to-75% dark:to-black" />
+            <div className="absolute left-0 z-20 h-full w-6 -translate-x-0.5 bg-gradient-to-l from-transparent to-black" />
+            <div className="absolute right-0 z-20 h-full w-40 translate-x-0.5 bg-gradient-to-r from-transparent to-black to-75%" />
             <button
               onClick={() => handleSliderButtonRight(1)}
               className="group absolute right-10 z-30 flex h-6 w-8 items-center justify-center rounded-full border border-white/20 bg-black bg-gradient-to-r from-white/10 to-black opacity-75 hover:border-white/30"
@@ -162,19 +157,6 @@ const Hero: FC<{ className?: string }> = ({ className }) => {
                 </>
               </PrimaryButton>
             </GlowWrapper>
-            <TextButton
-              onClick={() => {
-                router.push("https://agentgpt.reworkd.ai/").catch(console.error);
-              }}
-            >
-              <>
-                <span className="py-2">Try demo</span>
-                <FaChevronRight
-                  size="12"
-                  className="text-gray-400 transition-transform group-hover:translate-x-1"
-                />
-              </>
-            </TextButton>
           </div>
         </div>
       </div>
@@ -184,24 +166,34 @@ const Hero: FC<{ className?: string }> = ({ className }) => {
 
 const roles = [
   {
-    title: "Web Navigator",
-    subtitle: "List competitor products",
+    title: "Manufacturing",
+    subtitle: "Collect product data",
     icon: <PurpleHeroIcon />,
   },
   {
-    title: "Marketer",
-    subtitle: "Create new campaigns",
+    title: "E-commerce",
+    subtitle: "Get competitor prices",
     icon: <OrangeHeroIcon />,
   },
   {
-    title: "Validator",
-    subtitle: "Ensure data compliancy",
+    title: "Recruiting",
+    subtitle: "Scrape job postings",
     icon: <GreenHeroIcon />,
   },
   {
-    title: "Analyzer",
-    subtitle: "Analyze company metrics",
+    title: "Lead Generation",
+    subtitle: "Assemble prospect list",
+    icon: <PurpleHeroIcon />,
+  },
+  {
+    title: "Real Estate",
+    subtitle: "Get property listings",
     icon: <BlueHeroIcon />,
+  },
+  {
+    title: "Media",
+    subtitle: "Get News & Article data",
+    icon: <OrangeHeroIcon />,
   },
 ];
 
